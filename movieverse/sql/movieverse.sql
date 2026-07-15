@@ -1,0 +1,86 @@
+CREATE DATABASE IF NOT EXISTS movieverse
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_unicode_ci;
+
+USE movieverse;
+
+CREATE TABLE IF NOT EXISTS users (
+  id              INT AUTO_INCREMENT PRIMARY KEY,
+  username        VARCHAR(50)  NOT NULL UNIQUE,
+  email           VARCHAR(150) NOT NULL UNIQUE,
+  password_hash   VARCHAR(255) NOT NULL,          
+  bio             TEXT         DEFAULT NULL,
+  profile_picture VARCHAR(255) DEFAULT NULL,      
+  created_at      TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS movies (
+  id           INT AUTO_INCREMENT PRIMARY KEY,
+  imdb_id      VARCHAR(20)  NOT NULL UNIQUE,    
+  title        VARCHAR(255) NOT NULL,
+  year         VARCHAR(10)  DEFAULT NULL,
+  genre        VARCHAR(255) DEFAULT NULL,
+  plot         TEXT         DEFAULT NULL,
+  poster       VARCHAR(500) DEFAULT NULL,
+  actors       VARCHAR(500) DEFAULT NULL,
+  imdb_rating  VARCHAR(10)  DEFAULT NULL,
+  created_at   TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS reviews (
+  id         INT AUTO_INCREMENT PRIMARY KEY,
+  user_id    INT NOT NULL,
+  movie_id   INT NOT NULL,
+  rating     TINYINT NOT NULL CHECK (rating BETWEEN 1 AND 10),
+  review_text TEXT DEFAULT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY unique_user_movie (user_id, movie_id),
+  FOREIGN KEY (user_id)  REFERENCES users(id)  ON DELETE CASCADE,
+  FOREIGN KEY (movie_id) REFERENCES movies(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS watchlists (
+  id         INT AUTO_INCREMENT PRIMARY KEY,
+  user_id    INT NOT NULL,
+  movie_id   INT NOT NULL,
+  watched    TINYINT(1) NOT NULL DEFAULT 0,      
+  added_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY unique_watch (user_id, movie_id),
+  FOREIGN KEY (user_id)  REFERENCES users(id)  ON DELETE CASCADE,
+  FOREIGN KEY (movie_id) REFERENCES movies(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS recently_viewed (
+  id        INT AUTO_INCREMENT PRIMARY KEY,
+  user_id   INT NOT NULL,
+  movie_id  INT NOT NULL,
+  viewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY unique_view (user_id, movie_id),
+  FOREIGN KEY (user_id)  REFERENCES users(id)  ON DELETE CASCADE,
+  FOREIGN KEY (movie_id) REFERENCES movies(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS otp_codes (
+  id         INT AUTO_INCREMENT PRIMARY KEY,
+  user_id    INT NOT NULL,
+  otp_code   CHAR(6) NOT NULL,
+  expires_at DATETIME NOT NULL,
+  used       TINYINT(1) NOT NULL DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS login_attempts (
+  id          INT AUTO_INCREMENT PRIMARY KEY,
+  email       VARCHAR(150) NOT NULL,
+  ip_address  VARCHAR(45)  NOT NULL,
+  attempted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS jwt_blacklist (
+  id         INT AUTO_INCREMENT PRIMARY KEY,
+  jti        VARCHAR(64) NOT NULL UNIQUE,        
+  expires_at DATETIME NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
